@@ -9,18 +9,17 @@ export default function RoboGenerator() {
     const res = await fetch("/api/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt: "your prompt here" })
+      body: JSON.stringify({ prompt: "your prompt here" }),
     });
   
     const data = await res.json();
-    const id = data.id; // ✅ This must match backend response key
+    const id = data.id;
   
     if (!id) {
-      console.error("❌ ID is missing from /api/generate response");
+      console.error("❌ ID missing from /api/generate");
       return;
     }
   
-    // Start polling status
     checkStatus(id);
   };
   
@@ -29,12 +28,12 @@ export default function RoboGenerator() {
     const data = await res.json();
   
     if (data.status === "done") {
-      console.log("✅ Image URL:", data.imageUrl);
-      // display imageUrl on your site
+      console.log("✅ Image ready:", data.imageUrl);
+      // Show image
     } else if (data.status === "processing") {
-      setTimeout(() => checkStatus(id), 2000); // poll again
+      setTimeout(() => checkStatus(id), 2000);
     } else {
-      console.error("❌ Image generation failed");
+      console.error("❌ Generation failed:", data);
     }
   };
   
