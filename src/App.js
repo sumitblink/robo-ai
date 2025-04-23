@@ -40,30 +40,40 @@ export default function App() {
   const handleGenerate = async () => {
     if (!preview) return;
     setLoading(true);
-
+  
     try {
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ baseImage: preview }),
       });
-
-      const contentType = res.headers.get("content-type") || "";
-      if (!contentType.includes("application/json")) {
-        throw new Error("❌ Server didn't return JSON");
-      }
-
-      const data = await res.json();
-      if (!data.imageUrl) throw new Error("Image not received");
-
-      setGeneratedImage(data.imageUrl);
-    } catch (error) {
-      alert("Failed to generate. Check console.");
-      console.error("❌ Error:", error);
-    } finally {
+  
+      const { predictionId } = await res.json();
+  
+      // Poll every 3s until we get the image
+      const poll = async () => {
+        const statusRes = await fetch(`/api/status?id=${predictionId}`);
+        const statusData = await statusRes.json();
+  
+        if (statusData.status === "done") {
+          setGeneratedImage(statusData.imageUrl);
+          setLoading(false);
+        } else if (statusData.status === "failed") {
+          throw new Error("Prediction failed");
+        } else {
+          setTimeout(poll, 3000);
+        }
+      };
+  
+      poll();
+  
+    } catch (err) {
+      console.error("Polling failed:", err);
+      alert("Something went wrong. Check console.");
       setLoading(false);
     }
   };
+  
 
   return (
     <div style={{ textAlign: "center", marginTop: 40, fontFamily: "sans-serif" }}>
