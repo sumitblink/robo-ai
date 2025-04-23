@@ -1,62 +1,71 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
+import './App.css';
 
-export default function RoboGenerator() {
+function App() {
+  const [prompt, setPrompt] = useState('');
   const [imageUrl, setImageUrl] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [prompt, setPrompt] = useState("");
 
   const generateImage = async () => {
-    const res = await fetch("/api/generate", {
+    setLoading(true);
+    setImageUrl(null);
+
+    const response = await fetch("/api/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt: "your prompt here" }),
+      body: JSON.stringify({ prompt })
     });
-  
-    const data = await res.json();
+
+    const data = await response.json();
     const id = data.id;
-  
+
     if (!id) {
-      console.error("❌ ID missing from /api/generate");
+      console.error("❌ No ID returned");
+      setLoading(false);
       return;
     }
-  
-    checkStatus(id);
+
+    pollStatus(id);
   };
-  
-  const checkStatus = async (id) => {
+
+  const pollStatus = async (id) => {
     const res = await fetch(`/api/status?id=${id}`);
     const data = await res.json();
-  
+
     if (data.status === "done") {
-      console.log("✅ Image ready:", data.imageUrl);
-      // Show image
+      setImageUrl(data.imageUrl);
+      setLoading(false);
     } else if (data.status === "processing") {
-      setTimeout(() => checkStatus(id), 2000);
+      setTimeout(() => pollStatus(id), 2000);
     } else {
-      console.error("❌ Generation failed:", data);
+      console.error("Generation failed");
+      setLoading(false);
     }
   };
-  
 
   return (
-    <div style={{ padding: 20 }}>
-      <h2>Robo Image Generator</h2>
+    <div className="App">
+      <h1>🤖 Generate Robo Avatar</h1>
       <input
         type="text"
+        placeholder="Enter your prompt"
         value={prompt}
-        placeholder="Enter prompt..."
         onChange={(e) => setPrompt(e.target.value)}
-        style={{ width: "300px", marginRight: 10 }}
+        style={{ padding: "10px", width: "300px" }}
       />
-      <button onClick={generateImage}>Generate</button>
+      <button onClick={generateImage} style={{ marginLeft: "10px", padding: "10px 20px" }}>
+        Generate
+      </button>
 
       {loading && <p>Loading...</p>}
+
       {imageUrl && (
-        <div>
-          <h3>Generated Image:</h3>
-          <img src={imageUrl} alt="Generated" style={{ width: "300px" }} />
+        <div style={{ marginTop: "20px" }}>
+          <img src={imageUrl} alt="Generated Robo" style={{ maxWidth: "300px" }} />
         </div>
       )}
     </div>
   );
 }
+
+export default App;

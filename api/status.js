@@ -12,8 +12,8 @@ export default async function handler(req, res) {
     const prediction = await replicate.predictions.get(id);
 
     if (prediction.status === "succeeded") {
-      const outputUrl = Array.isArray(prediction.output) ? prediction.output[0] : null;
-      return res.status(200).json({ status: "done", imageUrl: outputUrl });
+      const imageUrl = Array.isArray(prediction.output) ? prediction.output[0] : null;
+      return res.status(200).json({ status: "done", imageUrl });
     } else if (prediction.status === "failed") {
       return res.status(200).json({ status: "failed" });
     } else {
@@ -22,6 +22,6 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error("🚨 Status Error:", error);
-    return res.status(500).json({ error: "Status check failed" });
+    res.status(500).json({ error: "Status check failed" });
   }
 }
