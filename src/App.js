@@ -31,6 +31,7 @@ export default function App() {
     const file = e.target.files[0];
     setSelectedFile(file);
     setGeneratedImage(null);
+
     const reader = new FileReader();
     reader.onloadend = () => setPreview(reader.result);
     reader.readAsDataURL(file);
@@ -39,23 +40,23 @@ export default function App() {
   const handleGenerate = async () => {
     if (!preview) return;
     setLoading(true);
+
     try {
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ baseImage: preview }),
       });
-  
+
       const contentType = res.headers.get("content-type") || "";
       if (!contentType.includes("application/json")) {
         throw new Error("❌ Server didn't return JSON");
       }
-  
+
       const data = await res.json();
-  
       if (!data.imageUrl) throw new Error("Image not received");
+
       setGeneratedImage(data.imageUrl);
-  
     } catch (error) {
       alert("Failed to generate. Check console.");
       console.error("❌ Error:", error);
@@ -63,7 +64,6 @@ export default function App() {
       setLoading(false);
     }
   };
-  
 
   return (
     <div style={{ textAlign: "center", marginTop: 40, fontFamily: "sans-serif" }}>
@@ -77,19 +77,16 @@ export default function App() {
         <>
           <img src={preview} alt="preview" style={{ width: 200, borderRadius: 10 }} />
           <br /><br />
-          <button onClick={handleGenerate} style={{
-            padding: "10px 20px",
-            fontSize: "16px",
-            cursor: "pointer"
-          }}>
+          <button
+            onClick={handleGenerate}
+            style={{ padding: "10px 20px", fontSize: "16px", cursor: "pointer" }}
+          >
             🚀 Generate Robo Avatar
           </button>
         </>
       )}
 
-      {loading && (
-        <p style={{ marginTop: 20, fontWeight: "bold" }}>{loadingText}</p>
-      )}
+      {loading && <p style={{ marginTop: 20, fontWeight: "bold" }}>{loadingText}</p>}
 
       {generatedImage && (
         <>
