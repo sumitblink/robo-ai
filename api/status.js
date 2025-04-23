@@ -12,7 +12,8 @@ export default async function handler(req, res) {
     const prediction = await replicate.predictions.get(id);
 
     if (prediction.status === "succeeded") {
-      return res.status(200).json({ status: "done", imageUrl: prediction.output[0] });
+      const outputUrl = Array.isArray(prediction.output) ? prediction.output[0] : null;
+      return res.status(200).json({ status: "done", imageUrl: outputUrl });
     } else if (prediction.status === "failed") {
       return res.status(200).json({ status: "failed" });
     } else {

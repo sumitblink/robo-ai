@@ -24,7 +24,8 @@ export default async function handler(req, res) {
       webhook_events_filter: ["completed"]
     });
 
-    res.status(200).json({ predictionId: prediction.id });
+    // ✅ Return the ID as 'id' (not predictionId)
+    res.status(200).json({ id: prediction.id });
 
   } catch (error) {
     console.error("🚨 Generate Error:", error);
