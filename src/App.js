@@ -1,108 +1,94 @@
 import React, { useState, useEffect } from "react";
 
 const loadingTexts = [
-  "⚙️ Warming up the metals...",
-  "🔧 Gearing up the circuits...",
-  "🛠️ Assembling your robo form...",
-  "✨ Injecting sci-fi details...",
-  "🧠 Booting up AI consciousness...",
-  "📡 Syncing avatar core...",
+  "Warming up the exoskeleton...",
+  "Calibrating AI circuits...",
+  "Forging cybernetic limbs...",
+  "Activating mech-core...",
+  "Rendering your Robo Avatar..."
 ];
 
 export default function App() {
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [preview, setPreview] = useState(null);
-  const [generatedImage, setGeneratedImage] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [prompt, setPrompt] = useState("");
   const [loadingText, setLoadingText] = useState(loadingTexts[0]);
+  const [loading, setLoading] = useState(false);
+  const [image, setImage] = useState(null);
 
   useEffect(() => {
     if (!loading) return;
     const interval = setInterval(() => {
       setLoadingText((prev) => {
-        const index = (loadingTexts.indexOf(prev) + 1) % loadingTexts.length;
-        return loadingTexts[index];
+        const next = loadingTexts[(loadingTexts.indexOf(prev) + 1) % loadingTexts.length];
+        return next;
       });
     }, 1000);
     return () => clearInterval(interval);
   }, [loading]);
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    setSelectedFile(file);
-    setGeneratedImage(null);
-
-    const reader = new FileReader();
-    reader.onloadend = () => setPreview(reader.result);
-    reader.readAsDataURL(file);
-  };
-
-  const handleGenerate = async () => {
-    if (!preview) return;
+  const handleSubmit = async () => {
     setLoading(true);
-  
+    setImage(null);
+
     try {
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ baseImage: preview }),
+        body: JSON.stringify({ prompt }),
       });
-  
+
       const { predictionId } = await res.json();
-  
-      // Poll every 3s until we get the image
+
       const poll = async () => {
-        const statusRes = await fetch(`/api/status?id=${predictionId}`);
-        const statusData = await statusRes.json();
-  
-        if (statusData.status === "done") {
-          setGeneratedImage(statusData.imageUrl);
+        const status = await fetch(`/api/status?id=${predictionId}`);
+        const data = await status.json();
+
+        if (data.status === "done") {
+          setImage(data.imageUrl);
           setLoading(false);
-        } else if (statusData.status === "failed") {
-          throw new Error("Prediction failed");
+        } else if (data.status === "failed") {
+          alert("❌ Generation failed");
+          setLoading(false);
         } else {
           setTimeout(poll, 3000);
         }
       };
-  
+
       poll();
-  
+
     } catch (err) {
-      console.error("Polling failed:", err);
-      alert("Something went wrong. Check console.");
+      alert("Error generating image.");
+      console.error(err);
       setLoading(false);
     }
   };
-  
 
   return (
-    <div style={{ textAlign: "center", marginTop: 40, fontFamily: "sans-serif" }}>
-      <h1>🤖 Robo Avatar Generator</h1>
-      <p>Upload your photo and see your sci-fi transformation!</p>
-
-      <input type="file" accept="image/*" onChange={handleFileChange} />
+    <div style={{ textAlign: "center", padding: 40, fontFamily: "sans-serif" }}>
+      <h1>🤖 Robo Avatar Generator (Flux 1.1)</h1>
+      <p>Type a sci-fi robo avatar prompt below:</p>
+      <input
+        value={prompt}
+        onChange={(e) => setPrompt(e.target.value)}
+        placeholder="e.g., Robo Cop standing in rain"
+        style={{ width: "80%", padding: 10, fontSize: 16 }}
+      />
       <br /><br />
+      <button
+        onClick={handleSubmit}
+        style={{ padding: "10px 20px", fontSize: "16px", cursor: "pointer" }}
+      >
+        Generate 🚀
+      </button>
 
-      {preview && (
-        <>
-          <img src={preview} alt="preview" style={{ width: 200, borderRadius: 10 }} />
-          <br /><br />
-          <button
-            onClick={handleGenerate}
-            style={{ padding: "10px 20px", fontSize: "16px", cursor: "pointer" }}
-          >
-            🚀 Generate Robo Avatar
-          </button>
-        </>
+      {loading && (
+        <p style={{ marginTop: 20, fontStyle: "italic", fontWeight: "bold" }}>{loadingText}</p>
       )}
 
-      {loading && <p style={{ marginTop: 20, fontWeight: "bold" }}>{loadingText}</p>}
-
-      {generatedImage && (
-        <>
-          <h3>Your Robo Avatar:</h3>
-          <img src={generatedImage} alt="Generated" style={{ width: 300, borderRadius: 10 }} />
-        </>
+      {image && (
+        <div style={{ marginTop: 40 }}>
+          <h3>🖼️ Robo Avatar:</h3>
+          <img src={image} alt="Generated Robo Avatar" style={{ maxWidth: 400, borderRadius: 10 }} />
+        </div>
       )}
     </div>
   );
