@@ -12,7 +12,7 @@ export default async function handler(req, res) {
 
   try {
     const output = await replicate.run(
-      "black-forest-labs/flux-schnell:latest",
+      "black-forest-labs/flux-schnell:678ba3040711ba1f5427cf0280d4ad1c5a6fc1551f7dc37766d26394b01a7e17",
       {
         input: {
           prompt,
@@ -21,6 +21,7 @@ export default async function handler(req, res) {
         },
       }
     );
+    
 
     res.status(200).json({ imageUrl: output[0] });
 
