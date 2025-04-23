@@ -45,15 +45,25 @@ export default function App() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ baseImage: preview }),
       });
+  
+      const contentType = res.headers.get("content-type") || "";
+      if (!contentType.includes("application/json")) {
+        throw new Error("❌ Server didn't return JSON");
+      }
+  
       const data = await res.json();
+  
+      if (!data.imageUrl) throw new Error("Image not received");
       setGeneratedImage(data.imageUrl);
+  
     } catch (error) {
       alert("Failed to generate. Check console.");
-      console.error(error);
+      console.error("❌ Error:", error);
     } finally {
       setLoading(false);
     }
   };
+  
 
   return (
     <div style={{ textAlign: "center", marginTop: 40, fontFamily: "sans-serif" }}>
